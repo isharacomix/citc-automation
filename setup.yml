@@ -1,0 +1,95 @@
+---
+- hosts: hosts
+  become: true
+  tasks:
+    - name: Push configuration files to hosts
+      copy:
+        src: "configs/{{ ansible_hostname }}"
+        dest: /etc/network/interfaces
+
+    - name: Apply new networking configuration
+      command: /sbin/ifup -a
+
+- hosts: edge01
+  become: true
+  tasks:
+    - name: Push NAT rules
+      template:
+        src: configs/nat-rules.j2
+        dest: ~/nat-rules
+      with_items:
+        - 192.168.10.0/24
+
+    - name: Apply the rules
+      command: /bin/bash ~/nat-rules
+
+- hosts: network
+  become: true
+  tasks:
+    - name: Remove NetQ
+      apt:
+        name: cumulus-netq
+        state: absent
+        autoremove: yes
+
+- hosts: internet
+  vars:
+    ansible_become_pass: CumulusLinux!
+  tasks:
+    - name: Configure BGP
+      nclu:
+        commands:
+          - add interface swp1 ip address 10.255.255.0/31
+          - add interface swp2 ip address 10.255.255.2/31
+          - add bgp autonomous-system 8888
+          - add bgp neighbor 10.255.255.1 remote-as 4200000999
+          - add bgp neighbor 10.255.255.3 remote-as 4200000999
+          - add bgp neighbor 10.255.255.1 default-originate
+          - add bgp neighbor 10.255.255.3 default-originate
+          - add vrf tenant1
+          - add vrf tenant1 ip address 10.99.0.1/24
+          - add interface swp1.1111 ip address 99.99.99.1/30
+          - add interface swp1.1111 vrf tenant1
+          - add interface swp2.1111 ip address 99.99.99.5/30
+          - add interface swp2.1111 vrf tenant1
+          - add bgp vrf tenant1 autonomous-system 1111
+          - add bgp vrf tenant1 neighbor 99.99.99.2 remote-as 1111
+          - add bgp vrf tenant1 neighbor 99.99.99.6 remote-as 1111
+          - del bgp vrf tenant1 network import-check
+          - add bgp vrf tenant1 redistribute connected
+          - add bgp vrf tenant1 network 10.99.1.0/24
+          - add bgp vrf tenant1 network 10.99.2.0/24
+          - add bgp vrf tenant1 network 10.99.3.0/24
+          - add bgp vrf tenant1 network 10.99.4.0/24
+          - add bgp vrf tenant1 network 10.99.5.0/24
+        atomic: true
+
+    - name: Push NAT rules
+      template:
+        src: configs/nat-rules.j2
+        dest: ~/nat-rules
+      with_items:
+        - 10.255.255.0/24
+
+    - name: Apply the rules
+      become: true
+      command: /bin/bash /home/cumulus/nat-rules
+
+    - name: Change cumulus password
+      become: true
+      user: 
+        name: cumulus
+        password: $6$VTDTlR9C4THZGumN$nFv9H3tjqtD/GY1e1ya6HXD.0CxPG6gfuxf18BjcbX6PrWmqfheRPg5FFc/gtgYF3oPd2LEBXE2QvD67qRB3u.
+
+    - name: Remove authorized_keys file
+      file:
+        name: .ssh/authorized_keys
+        state: absent
+
+- hosts: localhost
+  become: yes
+  tasks:
+    - name: Delete locally generated Anisble hosts file.
+      file:
+        state: absent
+        name: /etc/ansible/hosts 

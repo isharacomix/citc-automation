@@ -1,0 +1,5 @@
+/sbin/iptables -t nat -A POSTROUTING -s {{ item }} -d 224.0.0.0/24 -j RETURN
+/sbin/iptables -t nat -A POSTROUTING -s {{ item }} -d 255.255.255.255/32 -j RETURN
+/sbin/iptables -t nat -A POSTROUTING -s {{ item }} ! -d {{ item }} -p tcp -j MASQUERADE --to-ports 1024-65535
+/sbin/iptables -t nat -A POSTROUTING -s {{ item }} ! -d {{ item }} -p udp -j MASQUERADE --to-ports 1024-65535
+/sbin/iptables -t nat -A POSTROUTING -s {{ item }} ! -d {{ item }} -j MASQUERADE

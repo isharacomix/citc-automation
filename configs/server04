@@ -1,0 +1,39 @@
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet dhcp
+
+auto eth1
+iface eth1 inet manual
+    bond-master uplink
+
+auto eth2
+iface eth2 inet manual
+    bond-master uplink
+
+auto uplink
+iface uplink inet static
+    bond-slaves eth1 eth2
+    bond-mode 802.3ad
+    bond-miimon 100
+    bond-min-links 1
+    bond-lacp-rate 1
+    bond-xmit-hash-policy layer3+4
+    address 172.16.0.4/24
+
+auto uplink.10
+iface uplink.10 inet static
+    address 192.168.10.4/24
+    vlan-raw-device uplink
+
+auto uplink.333
+iface uplink.333 inet static
+    address 10.30.0.4/25
+    vlan-raw-device uplink
+
+auto uplink.44
+iface uplink.44 inet static
+    address 10.0.44.132/28
+    vlan-raw-device uplink
+

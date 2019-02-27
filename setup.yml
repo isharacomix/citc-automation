@@ -75,16 +75,16 @@
       become: true
       command: /bin/bash /home/cumulus/nat-rules
 
-    - name: Change cumulus password
-      become: true
-      user: 
-        name: cumulus
-        password: $6$VTDTlR9C4THZGumN$nFv9H3tjqtD/GY1e1ya6HXD.0CxPG6gfuxf18BjcbX6PrWmqfheRPg5FFc/gtgYF3oPd2LEBXE2QvD67qRB3u.
+    #- name: Change cumulus password
+    #  become: true
+    #  user:
+    #    name: cumulus
+    #    password: $6$VTDTlR9C4THZGumN$nFv9H3tjqtD/GY1e1ya6HXD.0CxPG6gfuxf18BjcbX6PrWmqfheRPg5FFc/gtgYF3oPd2LEBXE2QvD67qRB3u.
 
-    - name: Remove authorized_keys file
-      file:
-        name: .ssh/authorized_keys
-        state: absent
+    #- name: Remove authorized_keys file
+    #  file:
+    #    name: .ssh/authorized_keys
+    #    state: absent
 
 - hosts: localhost
   become: yes
@@ -92,4 +92,4 @@
     - name: Delete locally generated Anisble hosts file.
       file:
         state: absent
-        name: /etc/ansible/hosts 
+        name: /etc/ansible/hosts
